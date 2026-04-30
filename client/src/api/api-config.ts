@@ -6,4 +6,13 @@ export const API_ENDPOINTS = {
     LOGOUT: "/auth/logout",
     ME: "/auth/me",
   },
+
+  WALLET: {
+    GET: "/wallet",
+  },
+
+  BET: {
+    PLACE: "/bet/place",
+    RESOLVE: "/bet/resolve",
+  },
 };

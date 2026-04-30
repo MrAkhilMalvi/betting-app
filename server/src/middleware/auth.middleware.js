@@ -6,7 +6,6 @@ export const protect = async (req, res, next) => {
     const accessToken = req.cookies.rocket_access_token;
     const refreshToken = req.cookies.rocket_refresh_token;
 
-    console.log("COOKIES:", req.cookies); // 🔥 debug
 
     if (!accessToken && !refreshToken) {
       return res.status(401).json({ message: "Unauthorized" });

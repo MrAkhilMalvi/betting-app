@@ -9,12 +9,13 @@ import {
   googleLoginApi,
 } from "../api/Auth.api";
 
+import { getWalletApi } from "../api/Wallet.api";
+
 type User = {
   id: string;
   username: string;
   email?: string;
   avatar?: string;
-  balance?: number;
 };
 
 type AuthContextType = {
@@ -27,9 +28,10 @@ type AuthContextType = {
   login: (data: { identifier: string; password: string }) => Promise<void>;
   signup: (data: { username: string; email?: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
-
-  // ✅ ADD THIS
   googleLogin: (token: string) => Promise<void>;
+
+  // 🔥 expose for refresh after bet
+  refreshWallet: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({} as any);
@@ -40,21 +42,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
-  // 🔁 Auto login via cookies
+  // 🪙 Wallet Fetch (centralized)
+  const fetchWallet = async () => {
+    try {
+      const res = await getWalletApi();
+      setBalance(Number(res.data.balance) || 0);
+    } catch {
+      setBalance(0);
+    }
+  };
+
+  // 🔁 Auto login
   useEffect(() => {
-    const fetchMe = async () => {
+    const init = async () => {
       try {
         const res = await getMeApi();
         setUser(res.data.user);
-        setBalance(Number(res.data.user.balance) || 0);
+
+        await fetchWallet(); // ✅ correct source
       } catch {
         setUser(null);
+        setBalance(0);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMe();
+    init();
   }, []);
 
   // 🔐 LOGIN
@@ -62,8 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await loginApi(data);
     setUser(res.data.user);
 
-    const me = await getMeApi();
-    setBalance(me.data.user.balance || 0);
+    await fetchWallet(); // ✅ no getMe again
 
     setAuthModalOpen(false);
   };
@@ -78,14 +91,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await login({ identifier: data.username, password: data.password });
   };
 
-  // 🔥 GOOGLE LOGIN (FIXED)
+  // 🔥 GOOGLE LOGIN
   const googleLogin = async (token: string) => {
     const res = await googleLoginApi(token);
 
     setUser(res.data.user);
 
-    const me = await getMeApi();
-    setBalance(me.data.user.balance || 0);
+    await fetchWallet(); // ✅ correct
 
     setAuthModalOpen(false);
   };
@@ -108,7 +120,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         signup,
         logout,
-        googleLogin, // ✅ now correct
+        googleLogin,
+        refreshWallet: fetchWallet, // 🔥 important for betting
       }}
     >
       {children}

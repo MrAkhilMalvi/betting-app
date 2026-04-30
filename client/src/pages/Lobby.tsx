@@ -19,7 +19,7 @@ export const Lobby: React.FC<Props> = ({ onSelectGame }) => {
 
   return (
     <div className="flex-1 p-8 max-w-7xl mx-auto w-full">
-      <h1 className="text-3xl font-bold text-white mb-8 border-l-4 border-[#4ADE80] pl-4">
+      <h1 className="text-3xl font-bold text-black mb-8 border-l-4 border-[#4ADE80] pl-4">
         Lobby Games
       </h1>
 
