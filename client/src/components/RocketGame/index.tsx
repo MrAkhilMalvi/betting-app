@@ -16,6 +16,7 @@ import { clsx } from "clsx";
 import { placeBetApi, resolveBetApi } from "../../api/Bet.api";
 import { motion, AnimatePresence } from "framer-motion";
 import { copy } from "../../lib/copySeed";
+import toast from "react-hot-toast";
 
 type GameState = "waiting" | "running" | "crashed";
 
@@ -126,7 +127,7 @@ export const RocketGame: React.FC = () => {
 
       if (gameState === "waiting" && !hasBet) {
         if (balance < betAmount) {
-          alert("Insufficient balance");
+          toast.error("Insufficient balance");
           return;
         }
 
@@ -139,8 +140,10 @@ export const RocketGame: React.FC = () => {
         setHasBet(true);
         await refreshWallet();
       } else if (gameState === "running" && hasBet && betId && multiplier > 1) {
-        if (!roundId) return alert("Round sync error");
-
+        if (!roundId) {
+          toast.error("Round sync error");
+          return;
+        }
         await resolveBetApi(betId, multiplier);
         setHasBet(false);
         setBetId(null);
@@ -149,11 +152,11 @@ export const RocketGame: React.FC = () => {
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       if (msg === "INVALID_ROUND") {
-        alert("💥 Too late! You missed the crash");
+       toast("💥 Too late! You missed the crash");
       } else if (msg === "BET_CLOSED") {
-        alert("Betting closed");
+        toast("Betting closed");
       } else {
-        alert(msg || "Action failed");
+        toast.error(msg || "Action failed");
       }
     } finally {
       setIsLoading(false);

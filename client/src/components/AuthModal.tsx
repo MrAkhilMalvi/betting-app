@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { X, User, Lock, Loader2, Mail } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
+import toast from "react-hot-toast";
 
 export const AuthModal = () => {
   const {
@@ -35,8 +36,8 @@ export const AuthModal = () => {
       }
 
       setAuthModalOpen(false);
-    } catch {
-      alert(mode === "login" ? "Login failed" : "Signup failed");
+    } catch (err) {
+      toast.error(mode === "login" ? "Login failed" : "Signup failed");
     } finally {
       setIsLoading(false);
     }
@@ -165,8 +166,8 @@ export const AuthModal = () => {
                 if (!res.credential) throw new Error();
                 await googleLogin(res.credential);
                 setAuthModalOpen(false);
-              } catch {
-                alert("Google login failed");
+              } catch (err) {
+                toast.error(err.message || "Google login failed");
               }
             }}
             onError={() => alert("Google login failed")}
