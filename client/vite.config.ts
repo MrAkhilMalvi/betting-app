@@ -13,7 +13,7 @@ export default defineConfig({
     // 🔥 PROXY CONFIG (IMPORTANT)
     proxy: {
       "/api": {
-        target: "http://192.168.0.58:3000", // your backend
+        target: "http://localhost:3000", // your backend
         changeOrigin: true,
         secure: false,
       },

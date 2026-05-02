@@ -5,6 +5,7 @@ import { AuthModal } from "./components/AuthModal";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RocketGame } from "./components/RocketGame";
 import { Lobby } from "./pages/Lobby"; // ✅ ADD THIS
+import { PoolPage } from "./modules/pool/pages/PoolPage";
 
 export default function App() {
   const [view, setView] = useState("lobby");
@@ -15,7 +16,9 @@ export default function App() {
 
       {/* ✅ SHOW LOBBY */}
       {view === "lobby" && (
-        <Lobby onSelectGame={() => setView("game")} />
+        <Lobby onSelectGame={() => setView("game")}
+        onOpenPool={() => setView("pool")}
+        />
       )}
 
       {/* ✅ SHOW GAME */}
@@ -24,6 +27,15 @@ export default function App() {
           <RocketGame />
         </ProtectedRoute>
       )}
+
+      {/* 🔥 SHOW POOL */}
+{view === "pool" && (
+  <ProtectedRoute>
+    <PoolPage />
+  </ProtectedRoute>
+)}
+
+
 
       <AuthModal />
     </AuthProvider>
