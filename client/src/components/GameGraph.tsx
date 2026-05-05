@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
-import { Rocket } from 'lucide-react';
 
-// Assuming you have this defined, or just use strings if preferred.
 type GameState = "waiting" | "running" | "crashed";
 
 interface Props {
@@ -13,10 +11,9 @@ export const GameGraph: React.FC<Props> = ({ multiplier, gameState }) => {
 
   // ✅ Advanced smooth scaling (true exponential curve feeling)
   const { x, y, angle } = useMemo(() => {
-    // If waiting, lock it to the start line
     if (gameState === 'waiting') return { x: 0, y: 0, angle: 0 };
 
-    // Use Math.log for time (X) to stretch it out, and pow for Y to curve it up
+    // Logarithmic X (time) and Exponential Y (height) for the classic crash curve
     const rawX = Math.log(multiplier) * 45; 
     const rawY = Math.pow(Math.log(multiplier), 1.6) * 40;
 
@@ -28,12 +25,11 @@ export const GameGraph: React.FC<Props> = ({ multiplier, gameState }) => {
     const cX = progressX * 0.6;
     const cY = 100 - progressY * 0.05;
 
-    // Calculate tangent angle to rotate the rocket accurately
+    // Calculate tangent angle to rotate the head accurately
     const dx = progressX - cX;
     const dy = (100 - progressY) - cY;
     let rot = Math.atan2(dy, dx) * (180 / Math.PI);
 
-    // Cap the upward rotation so the rocket doesn't flip backward
     if (rot < -85) rot = -85;
 
     return { x: progressX, y: progressY, angle: rot };
@@ -41,130 +37,164 @@ export const GameGraph: React.FC<Props> = ({ multiplier, gameState }) => {
 
   // ✅ SVG Curve Data
   const pathData = useMemo(() => {
-    // Start at (0, 100) -> Quad curve to (x, 100 - y)
     const cX = x * 0.6;
     const cY = 100 - y * 0.05;
     return `M 0 100 Q ${cX} ${cY}, ${x} ${100 - y}`;
   }, [x, y]);
 
-  // Dynamic colors based on state
   const isCrashed = gameState === 'crashed';
-  const lineColor = isCrashed ? '#f43f5e' : '#10b981'; // Rose for crash, Emerald for running
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none p-4">
+    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none rounded-2xl bg-[#0B0E14] shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]">
+      
+      {/* Subtle overlay vignette for depth */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-green-500/5 via-transparent to-transparent opacity-50"></div>
+
       <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
-        className="w-full h-full drop-shadow-xl"
+        className="w-full h-full"
         style={{ overflow: 'visible' }}
       >
         <defs>
-          {/* Running Line Gradient */}
-          <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#059669" /> {/* emerald-600 */}
-            <stop offset="100%" stopColor="#10b981" /> {/* emerald-500 */}
+          {/* Running Line Gradient (Neon Green) */}
+          <linearGradient id="lineGradRunning" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#059669" /> 
+            <stop offset="50%" stopColor="#10b981" /> 
+            <stop offset="100%" stopColor="#34d399" />
           </linearGradient>
 
-          {/* Fill Gradient Area under the curve */}
-          <linearGradient id="fillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={lineColor} stopOpacity={isCrashed ? "0.2" : "0.5"} />
-            <stop offset="100%" stopColor={lineColor} stopOpacity="0.0" />
+          {/* Crashed Line Gradient (Neon Red/Orange) */}
+          <linearGradient id="lineGradCrashed" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#be123c" /> 
+            <stop offset="100%" stopColor="#f43f5e" />
           </linearGradient>
 
-          {/* Glow filter for the rocket/dot */}
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+          {/* Running Fill Area Gradient */}
+          <linearGradient id="fillGradRunning" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+          </linearGradient>
+
+          {/* Crashed Fill Area Gradient */}
+          <linearGradient id="fillGradCrashed" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
+          </linearGradient>
+
+          {/* Outer Glow Filters */}
+          <filter id="glowGreen" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur1" />
+            <feGaussianBlur stdDeviation="4" result="blur2" />
             <feMerge>
-              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="blur2" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="glowRed" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur1" />
+            <feGaussianBlur stdDeviation="5" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur2" />
+              <feMergeNode in="blur1" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
 
-        {/* ✅ Subtle Chart Grid Background */}
-        <g stroke="#1e293b" strokeWidth="0.5" opacity="0.4">
-          <line x1="0" y1="25" x2="100" y2="25" />
-          <line x1="0" y1="50" x2="100" y2="50" />
-          <line x1="0" y1="75" x2="100" y2="75" />
-          <line x1="25" y1="0" x2="25" y2="100" />
-          <line x1="50" y1="0" x2="50" y2="100" />
-          <line x1="75" y1="0" x2="75" y2="100" />
+        {/* ✅ High-Tech Chart Grid Background */}
+        <g className="opacity-30">
+          {/* Horizontal Grid Lines */}
+          {[20, 40, 60, 80].map((lineY) => (
+            <line key={`h-${lineY}`} x1="0" y1={lineY} x2="100" y2={lineY} stroke="#1e293b" strokeWidth="0.3" strokeDasharray="1 2" />
+          ))}
+          {/* Vertical Grid Lines */}
+          {[20, 40, 60, 80].map((lineX) => (
+            <line key={`v-${lineX}`} x1={lineX} y1="0" x2={lineX} y2="100" stroke="#1e293b" strokeWidth="0.3" strokeDasharray="1 2" />
+          ))}
+          {/* Axis Base Lines (Glowing) */}
+          <line x1="0" y1="100" x2="100" y2="100" stroke="#334155" strokeWidth="1" />
+          <line x1="0" y1="0" x2="0" y2="100" stroke="#334155" strokeWidth="1" />
         </g>
 
-        {/* ✅ The Graph Itself */}
+        {/* ✅ The Active Graph */}
         {gameState !== 'waiting' && (
           <g>
             {/* Fill under the curve */}
             <path
               d={`${pathData} L ${x} 100 L 0 100 Z`}
-              fill="url(#fillGrad)"
-              className="transition-all duration-75 ease-linear"
+              fill={isCrashed ? "url(#fillGradCrashed)" : "url(#fillGradRunning)"}
+              className="transition-all duration-100 ease-linear"
             />
 
-            {/* The actual line curve */}
+            {/* The main glowing line curve */}
             <path
               d={pathData}
               fill="none"
-              stroke={isCrashed ? '#f43f5e' : 'url(#lineGrad)'}
-              strokeWidth="2.5"
+              stroke={isCrashed ? 'url(#lineGradCrashed)' : 'url(#lineGradRunning)'}
+              strokeWidth="1.2"
               strokeLinecap="round"
-              className="transition-all duration-75 ease-linear"
-              style={{
-                filter: isCrashed ? 'drop-shadow(0 0 10px rgba(244, 63, 94, 0.8))' : 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.8))'
-              }}
+              filter={isCrashed ? 'url(#glowRed)' : 'url(#glowGreen)'}
+              className="transition-all duration-100 ease-linear"
             />
             
-            {/* ✅ Moving Element at the Tip */}
+            {/* ✅ Moving Element at the Tip (Comet Head) */}
             <g
               style={{
                 transform: `translate(${x}px, ${100 - y}px) rotate(${angle}deg)`,
-                transition: 'transform 75ms linear',
+                transition: 'transform 100ms linear',
                 transformOrigin: 'center'
               }}
             >
               {gameState === 'running' ? (
-                // 🚀 Flying Rocket Icon when Running
-                <g transform="translate(-4, -4) rotate(45)">
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)">
-                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
-                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
-                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
-                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
-                  </svg>
-                  {/* Rocket Engine Flame effect */}
-                  <circle cx="2" cy="22" r="2" fill="#f59e0b" filter="url(#glow)">
-                    <animate attributeName="r" values="1;2.5;1" dur="0.2s" repeatCount="indefinite" />
+                // 🚀 Sleek "Engine Core" (Glowing Dot)
+                <g>
+                  {/* Outer pulsing ring */}
+                  <circle cx="0" cy="0" r="2.5" fill="#34d399" opacity="0.3" filter="url(#glowGreen)">
+                    <animate attributeName="r" values="2;4;2" dur="1s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1s" repeatCount="indefinite" />
                   </circle>
+                  {/* Inner intense bright core */}
+                  <circle cx="0" cy="0" r="1" fill="#ffffff" filter="url(#glowGreen)" />
                 </g>
               ) : (
-                // 💥 Crash Explosion / Dot
-                <circle
-                  cx="0"
-                  cy="0"
-                  r="3"
-                  fill="#f43f5e"
-                  stroke="#ffffff"
-                  strokeWidth="1"
-                  filter="url(#glow)"
-                  className="animate-ping"
-                  style={{ animationDuration: '1s', animationIterationCount: 1 }}
-                />
+                // 💥 Crash Explosion Fragment Effect
+                <g filter="url(#glowRed)">
+                  {/* Core blast */}
+                  <circle cx="0" cy="0" r="2" fill="#ffffff" />
+                  <circle cx="0" cy="0" r="4" fill="#f43f5e" opacity="0.8" />
+                  
+                  {/* Shattered Particles */}
+                  <line x1="0" y1="0" x2="-4" y2="-4" stroke="#f43f5e" strokeWidth="0.8" strokeLinecap="round" />
+                  <line x1="0" y1="0" x2="5" y2="-2" stroke="#f43f5e" strokeWidth="0.6" strokeLinecap="round" />
+                  <line x1="0" y1="0" x2="-2" y2="5" stroke="#fca5a5" strokeWidth="0.5" strokeLinecap="round" />
+                  <line x1="0" y1="0" x2="4" y2="4" stroke="#fca5a5" strokeWidth="0.8" strokeLinecap="round" />
+                </g>
               )}
             </g>
           </g>
         )}
 
-        {/* ✅ Idle / Waiting State Flat Line */}
+        {/* ✅ Idle / Waiting State - Tech Loading Line */}
         {gameState === 'waiting' && (
-          <path
-            d="M 0 100 L 100 100"
-            stroke="#334155"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray="4 4"
-            className="animate-pulse"
-          />
+          <g>
+            <path
+              d="M 0 100 L 100 100"
+              stroke="#475569"
+              strokeWidth="0.8"
+              strokeLinecap="round"
+              strokeDasharray="4 6"
+            >
+              {/* Moves the dashes to look like data flowing */}
+              <animate attributeName="stroke-dashoffset" values="10;0" dur="0.8s" repeatCount="indefinite" />
+            </path>
+            {/* Pulsing Start Dot */}
+            <circle cx="0" cy="100" r="1.5" fill="#94a3b8">
+               <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+          </g>
         )}
       </svg>
     </div>

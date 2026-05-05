@@ -16,8 +16,9 @@ export default function App() {
 
       {/* ✅ SHOW LOBBY */}
       {view === "lobby" && (
-        <Lobby onSelectGame={() => setView("game")}
-        onOpenPool={() => setView("pool")}
+        <Lobby
+          onSelectGame={() => setView("game")}
+          onOpenPool={() => setView("pool")}
         />
       )}
 
@@ -29,13 +30,11 @@ export default function App() {
       )}
 
       {/* 🔥 SHOW POOL */}
-{view === "pool" && (
-  <ProtectedRoute>
-    <PoolPage />
-  </ProtectedRoute>
-)}
-
-
+      {view === "pool" && (
+        <ProtectedRoute>
+          <PoolPage />
+        </ProtectedRoute>
+      )}
 
       <AuthModal />
     </AuthProvider>
