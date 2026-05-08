@@ -7,6 +7,5 @@ const router = express.Router();
 router.get("/active", controller.getActivePool);
 router.post("/join", protect, controller.joinPool);
 router.post("/create", controller.createPool);
-router.post("/draw/:id", controller.drawWinner);
 
 export default router;

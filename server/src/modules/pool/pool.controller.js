@@ -22,14 +22,6 @@ export const createPool = async (req, res, next) => {
   }
 };
 
-export const drawWinner = async (req, res, next) => {
-  try {
-    const result = await service.drawWinner(req.params.id);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-};
 
 export const getActivePool = async (req, res, next) => {
   try {

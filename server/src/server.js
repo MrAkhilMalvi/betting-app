@@ -12,6 +12,7 @@ import {
   setCurrentRound,
 } from "./game/game.state.js";
 import { setIO } from "./config/socket/socket.js";
+import { startPoolListener } from "./modules/pool/pool.listner.js";
 import {
   generateServerSeed,
   generateHash,
@@ -29,6 +30,7 @@ const io = new Server(server, {
 
 // ✅ register globally
 setIO(io);
+startPoolListener(io);
 
 // 🎮 LOCAL STATE
 let multiplier = 1;
