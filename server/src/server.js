@@ -99,11 +99,8 @@ setInterval(async () => {
 
         // 💾 Store in DB
         const res = await pool.query(
-          `INSERT INTO game_rounds 
-           (crash_point, hash, salt, status, started_at)
-           VALUES ($1,$2,$3,'running',NOW())
-           RETURNING id`,
-          [crashPoint, hash, serverSeed]
+          "SELECT create_game_round($1,$2,$3) AS id",
+          [crashPoint, hash, serverSeed],
         );
 
         setCurrentRound(res.rows[0].id);
@@ -136,19 +133,13 @@ setInterval(async () => {
         const crashValue = Number(multiplier.toFixed(2));
 
         // ⚠️ Save seed BEFORE reset
-        const finishedSeed = await pool.query(
-          `SELECT salt FROM game_rounds WHERE id=$1`,
-          [currentRoundId]
-        );
+        const seedRes = await pool.query("SELECT get_round_seed($1) AS salt", [
+          currentRoundId,
+        ]);
 
-        const serverSeed = finishedSeed.rows[0]?.salt;
+        const serverSeed = seedRes.rows[0]?.salt;
 
-        await pool.query(
-          `UPDATE game_rounds
-           SET status='crashed', crashed_at=NOW()
-           WHERE id=$1`,
-          [currentRoundId]
-        );
+        await pool.query("SELECT crash_game_round($1)", [currentRoundId]);
 
         history.unshift({
           id: currentRoundId,
@@ -164,12 +155,7 @@ setInterval(async () => {
 
         // ✅ GRACE WINDOW (important)
         setTimeout(async () => {
-          await pool.query(
-            `UPDATE bets
-             SET status='lost'
-             WHERE round_id=$1 AND status='pending'`,
-            [currentRoundId]
-          );
+          await pool.query("SELECT resolve_lost_bets($1)", [currentRoundId]);
         }, 300);
 
         // ⏱ RESET
