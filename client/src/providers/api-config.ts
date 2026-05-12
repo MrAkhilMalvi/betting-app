@@ -15,4 +15,8 @@ export const API_ENDPOINTS = {
     PLACE: "/bet/place",
     RESOLVE: "/bet/resolve",
   },
+  POOL: {
+    ACTIVEPOOL: "/pool/active",
+    JOINPOOL: "/pool/join",
+  }
 };

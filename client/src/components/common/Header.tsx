@@ -1,5 +1,5 @@
 import { Rocket, LogOut } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 interface HeaderProps {
   onGoHome: () => void;

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { AuthProvider } from "./context/AuthContext";
-import { Header } from "./components/Header";
-import { AuthModal } from "./components/AuthModal";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { RocketGame } from "./components/RocketGame";
+import { AuthProvider } from "./features/auth/context/AuthContext";
+import { Header } from "./components/common/Header";
+import { AuthModal } from "./features/auth/components/AuthModal";
+import { ProtectedRoute } from "./features/auth/components/ProtectedRoute";
+import { RocketGame } from "./features/betting/components/RocketGame/index";
 import { Lobby } from "./pages/Lobby"; // ✅ ADD THIS
-import { PoolPage } from "./modules/pool/pages/PoolPage";
+import { PoolPage } from "./features/pool/pages/PoolPage";
 
 export default function App() {
   const [view, setView] = useState("lobby");

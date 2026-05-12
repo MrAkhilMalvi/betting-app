@@ -4,20 +4,27 @@ dotenv.config();
 import http from "http";
 import app from "./app.js";
 import { Server } from "socket.io";
+
 import pool from "./config/db.js";
+
 import {
   gameState,
   setGameState,
   currentRoundId,
   setCurrentRound,
 } from "./game/game.state.js";
+
 import { setIO } from "./config/socket/socket.js";
-import { startPoolListener } from "./modules/pool/pool.listner.js";
+
 import {
   generateServerSeed,
   generateHash,
   calculateCrashPoint,
 } from "./game/crash.logic.js";
+
+// ======================================================
+// SERVER
+// ======================================================
 
 const server = http.createServer(app);
 
@@ -28,24 +35,37 @@ const io = new Server(server, {
   },
 });
 
-// ✅ register globally
 setIO(io);
-startPoolListener(io);
 
-// 🎮 LOCAL STATE
+// ======================================================
+// LOCAL GAME STATE
+// ======================================================
+
 let multiplier = 1;
 let crashPoint = 1;
-let history = [];
-let isRunning = false;
 
-// 🔐 PROVABLY FAIR STATE
+let history = [];
+
+let activeUsers = 0;
+
+let gameLoop = null;
+let gameStarted = false;
+
+// provably fair
 let currentServerSeed = null;
 let currentHash = null;
 
-// 🔌 SOCKET
-io.on("connection", (socket) => {
-  console.log("✅ User connected:", socket.id);
+// ======================================================
+// SOCKETS
+// ======================================================
 
+io.on("connection", (socket) => {
+  activeUsers++;
+
+  console.log(`✅ User connected: ${socket.id}`);
+  console.log(`👥 Active users: ${activeUsers}`);
+
+  // send current state
   socket.emit("game:init", {
     multiplier,
     state: gameState,
@@ -53,70 +73,127 @@ io.on("connection", (socket) => {
     history,
   });
 
+  // 🚀 start game ONLY if not running
+  if (!gameStarted) {
+    gameStarted = true;
+    startWaitingPhase();
+  }
+
   socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
+    activeUsers--;
+
+    console.log(`❌ User disconnected: ${socket.id}`);
+    console.log(`👥 Active users: ${activeUsers}`);
+
+    // stop game if nobody online
+    if (activeUsers <= 0) {
+      console.log("🛑 No users online. Stopping game.");
+
+      gameStarted = false;
+
+      clearInterval(gameLoop);
+
+      setGameState("waiting");
+
+      multiplier = 1;
+    }
   });
 });
 
-// ⏱ GAME LOOP
-let waitDuration = 5000;
-let waitStartTime = null;
+// ======================================================
+// WAITING PHASE
+// ======================================================
 
-setInterval(async () => {
-  if (isRunning) return;
-  isRunning = true;
+async function startWaitingPhase() {
+  // nobody online
+  if (activeUsers <= 0) {
+    gameStarted = false;
+    return;
+  }
 
+  setGameState("waiting");
+
+  multiplier = 1;
+
+  // 🔐 generate provably fair data
+  currentServerSeed = generateServerSeed();
+  currentHash = generateHash(currentServerSeed);
+
+  let remaining = 5;
+
+  io.emit("game:waiting", {
+    remaining,
+    nextHash: currentHash,
+  });
+
+  const waitingTimer = setInterval(() => {
+    remaining--;
+
+    io.emit("game:waiting", {
+      remaining,
+      nextHash: currentHash,
+    });
+
+    if (remaining <= 0) {
+      clearInterval(waitingTimer);
+
+      startRound();
+    }
+  }, 1000);
+}
+
+// ======================================================
+// START ROUND
+// ======================================================
+
+async function startRound() {
   try {
-    // 🟡 WAITING PHASE
-    if (gameState === "waiting") {
-      if (!waitStartTime) waitStartTime = Date.now();
-
-      const remaining = waitDuration - (Date.now() - waitStartTime);
-
-      // 🔐 Generate next round seed + hash (only once)
-      if (!currentServerSeed) {
-        currentServerSeed = generateServerSeed();
-        currentHash = generateHash(currentServerSeed);
-      }
-
-      io.emit("game:waiting", {
-        remaining: Math.max(0, Math.ceil(remaining / 1000)),
-        nextHash: currentHash, // 🔥 shown before round
-      });
-
-      // ⏱ START ROUND
-      if (remaining <= 0) {
-        setGameState("running");
-        waitStartTime = null;
-
-        multiplier = 1;
-
-        const serverSeed = currentServerSeed;
-        const hash = currentHash;
-
-        // 🎲 Deterministic crash
-        crashPoint = calculateCrashPoint(serverSeed);
-
-        // 💾 Store in DB
-        const res = await pool.query(
-          "SELECT create_game_round($1,$2,$3) AS id",
-          [crashPoint, hash, serverSeed],
-        );
-
-        setCurrentRound(res.rows[0].id);
-
-        io.emit("game:start", {
-          roundId: res.rows[0].id,
-        });
-
-        // 🔄 Reset next seed for future round
-        currentServerSeed = null;
-        currentHash = null;
-      }
+    if (activeUsers <= 0) {
+      gameStarted = false;
+      return;
     }
 
-    // 🟢 RUNNING PHASE
-    if (gameState === "running") {
+    setGameState("running");
+
+    multiplier = 1;
+
+    // deterministic crash
+    crashPoint = calculateCrashPoint(currentServerSeed);
+
+    // save round ONCE
+    const res = await pool.query("SELECT create_game_round($1,$2,$3) AS id", [
+      crashPoint,
+      currentHash,
+      currentServerSeed,
+    ]);
+
+    const roundId = res.rows[0].id;
+
+    setCurrentRound(roundId);
+
+    io.emit("game:start", {
+      roundId,
+    });
+
+    // reset next seed
+    currentServerSeed = null;
+    currentHash = null;
+
+    runGameLoop();
+  } catch (err) {
+    console.error("🔥 START ROUND ERROR:", err.message);
+
+    setTimeout(startWaitingPhase, 3000);
+  }
+}
+
+// ======================================================
+// MULTIPLIER LOOP
+// ======================================================
+
+function runGameLoop() {
+  gameLoop = setInterval(async () => {
+    try {
       multiplier += 0.03 + multiplier * 0.01;
 
       const safeMultiplier = Number(multiplier.toFixed(2));
@@ -126,53 +203,68 @@ setInterval(async () => {
         roundId: currentRoundId,
       });
 
-      // 🔴 CRASH
-      if (multiplier >= crashPoint) {
-        setGameState("crashed");
+      // crash
+      if (safeMultiplier >= crashPoint) {
+        clearInterval(gameLoop);
 
-        const crashValue = Number(multiplier.toFixed(2));
-
-        // ⚠️ Save seed BEFORE reset
-        const seedRes = await pool.query("SELECT get_round_seed($1) AS salt", [
-          currentRoundId,
-        ]);
-
-        const serverSeed = seedRes.rows[0]?.salt;
-
-        await pool.query("SELECT crash_game_round($1)", [currentRoundId]);
-
-        history.unshift({
-          id: currentRoundId,
-          crashPoint: crashValue,
-        });
-        history = history.slice(0, 20);
-
-        io.emit("game:crash", {
-          multiplier: crashValue,
-          roundId: currentRoundId,
-          serverSeed: serverSeed, // 🔥 reveal for verification
-        });
-
-        // ✅ GRACE WINDOW (important)
-        setTimeout(async () => {
-          await pool.query("SELECT resolve_lost_bets($1)", [currentRoundId]);
-        }, 300);
-
-        // ⏱ RESET
-        setTimeout(() => {
-          setGameState("waiting");
-          multiplier = 1;
-        }, 3000);
+        await crashGame(safeMultiplier);
       }
-    }
-  } catch (err) {
-    console.error("🔥 GAME LOOP ERROR:", err.message);
-  } finally {
-    isRunning = false;
-  }
-}, 100);
+    } catch (err) {
+      console.error("🔥 GAME LOOP ERROR:", err.message);
 
-// 🚀 START SERVER
+      clearInterval(gameLoop);
+
+      setTimeout(startWaitingPhase, 3000);
+    }
+  }, 100);
+}
+
+// ======================================================
+// CRASH GAME
+// ======================================================
+
+async function crashGame(crashValue) {
+  try {
+    setGameState("crashed");
+
+    // save crash
+    await pool.query("SELECT crash_game_round($1)", [currentRoundId]);
+
+    // resolve bets
+    await pool.query("SELECT resolve_lost_bets($1)", [currentRoundId]);
+
+    // history
+    history.unshift({
+      id: currentRoundId,
+      crashPoint: crashValue,
+    });
+
+    history = history.slice(0, 20);
+
+    io.emit("game:crash", {
+      multiplier: crashValue,
+      roundId: currentRoundId,
+    });
+
+    // restart after 3 sec
+    setTimeout(() => {
+      if (activeUsers > 0) {
+        startWaitingPhase();
+      } else {
+        gameStarted = false;
+      }
+    }, 3000);
+  } catch (err) {
+    console.error("🔥 CRASH ERROR:", err.message);
+
+    setTimeout(startWaitingPhase, 3000);
+  }
+}
+
+// ======================================================
+// START SERVER
+// ======================================================
+
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {

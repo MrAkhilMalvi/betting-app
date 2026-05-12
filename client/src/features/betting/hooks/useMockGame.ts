@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, PlayerBet, GameHistory } from '../types/types';
+import { GameState, PlayerBet, GameHistory } from '@/features/betting/types/betting';
 
 export function useMockGame() {
   const [gameState, setGameState] = useState<GameState>('waiting');
