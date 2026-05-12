@@ -24,5 +24,4 @@ dist-ssr
 *.sw?
 
 *.env
-betting_app_backup.sql
-backup.tar
+BETTING*

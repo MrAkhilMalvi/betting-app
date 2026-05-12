@@ -38,3 +38,17 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #374151;
 }
+
+@layer utilities {
+  .glass-card {
+    @apply bg-surface/50 backdrop-blur-md border border-white/5;
+  }
+  
+  .neon-border-hover {
+    @apply transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_20px_rgba(74,222,128,0.1)];
+  }
+
+  .text-glow-primary {
+    text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+  }
+}

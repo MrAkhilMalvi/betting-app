@@ -1,25 +1,21 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
-import * as service from "../services/pool.service";
 import { Pool } from "../types/pool.types";
 
-import { socket } from "../../../api/socket/game.socket";
+import { socket } from "@/providers/socket/socket";
+import { fetchActivePool, joinPool } from "../services/poolService";
 
 export const usePool = () => {
   const [pool, setPool] = useState<Pool | null>(null);
-
   const [loading, setLoading] = useState(false);
 
   // 📦 Load pool
   const loadPool = async () => {
     try {
-      const data = await service.getPool();
-
+      const data = await fetchActivePool();
       setPool(data);
     } catch (err: any) {
       console.error(err);
-
       toast.error(err?.response?.data?.message || "Failed to load pool");
     }
   };
@@ -31,14 +27,11 @@ export const usePool = () => {
     setLoading(true);
 
     try {
-      const res = await service.joinPool(pool.id);
-
+      const res = await joinPool(pool.id);
       toast.success("Joined pool successfully 🎉");
-
       await loadPool();
     } catch (err: any) {
       console.error(err);
-
       toast.error(err?.response?.data?.message || "Failed to join pool");
     } finally {
       setLoading(false);

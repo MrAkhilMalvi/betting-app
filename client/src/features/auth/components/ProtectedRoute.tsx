@@ -1,4 +1,4 @@
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 export const ProtectedRoute: React.FC<{ children: any }> = ({ children }) => {
   const { user, loading, setAuthModalOpen } = useAuth();

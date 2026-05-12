@@ -12,13 +12,13 @@ import {
   ShieldCheck,
   Zap
 } from "lucide-react";
-import { socket } from "../../api/socket/game.socket";
-import { GameGraph } from "../GameGraph";
-import { useAuth } from "../../context/AuthContext";
+import { socket } from "@/providers/socket/socket";
+import { GameGraph } from "@/components/common/GameGraph";
+import { useAuth } from "@/features/auth/context/AuthContext";
 import { clsx } from "clsx";
-import { placeBetApi, resolveBetApi } from "../../api/Bet.api";
+import { placeBet, resolveBet } from "../../services/BetService";
 import { motion, AnimatePresence } from "framer-motion";
-import { copy } from "../../lib/copySeed";
+import { copy } from "@/lib/copySeed";
 import toast from "react-hot-toast";
 
 type GameState = "waiting" | "running" | "crashed";
@@ -116,8 +116,8 @@ export const RocketGame: React.FC = () => {
           toast.error("Insufficient balance");
           return;
         }
-        const res = await placeBetApi(betAmount);
-        const id = res.data?.bet?.id;
+        const res = await placeBet(betAmount);
+        const id = res.bet?.id;
         if (!id) throw new Error("Invalid bet response");
 
         setBetId(id);
@@ -128,7 +128,7 @@ export const RocketGame: React.FC = () => {
           toast.error("Round sync error");
           return;
         }
-        await resolveBetApi(betId, multiplier);
+        await resolveBet(betId, multiplier);
         setHasBet(false);
         setBetId(null);
         await refreshWallet();

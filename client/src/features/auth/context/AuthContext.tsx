@@ -7,9 +7,9 @@ import {
   logoutApi,
   getMeApi,
   googleLoginApi,
-} from "../api/Auth.api";
+} from "@/features/auth/services/AuthService";
 
-import { getWalletApi } from "../api/Wallet.api";
+import { getWalletApi } from "@/features/auth/services/AuthService";
 
 type User = {
   id: string;
@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchWallet = async () => {
     try {
       const res = await getWalletApi();
-      setBalance(Number(res.data.balance) || 0);
+      setBalance(Number(res.balance) || 0);
     } catch {
       setBalance(0);
     }
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const init = async () => {
       try {
         const res = await getMeApi();
-        setUser(res.data.user);
+        setUser(res.user);
 
         await fetchWallet(); // ✅ correct source
       } catch {
@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 🔐 LOGIN
   const login = async (data: { identifier: string; password: string }) => {
     const res = await loginApi(data);
-    setUser(res.data.user);
+    setUser(res.user);
 
     await fetchWallet(); // ✅ no getMe again
 
