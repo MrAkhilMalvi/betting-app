@@ -4,7 +4,8 @@ import {
   login,
   googleLogin,
   logout,
-  getMe 
+  getMe,
+  claimWelcomeBonus
 } from "./auth.controller.js";
 
 import { protect } from "../../middleware/auth.middleware.js";
@@ -19,5 +20,6 @@ router.post("/logout", logout);
 
 // 🔒 Protected
 router.get("/me", protect, getMe);
+router.post("/welcome", protect, claimWelcomeBonus);
 
 export default router;

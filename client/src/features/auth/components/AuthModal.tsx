@@ -5,13 +5,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 
 export const AuthModal = () => {
-  const {
-    isAuthModalOpen,
-    setAuthModalOpen,
-    login,
-    signup,
-    googleLogin,
-  } = useAuth();
+  const { isAuthModalOpen, setAuthModalOpen, login, signup, googleLogin } =
+    useAuth();
 
   const [mode, setMode] = useState<"login" | "signup">("login");
 
@@ -46,7 +41,6 @@ export const AuthModal = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-[#151A22] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl">
-
         {/* Header */}
         <div className="p-6 border-b border-white/5 flex justify-between items-center">
           <div>
@@ -67,7 +61,6 @@ export const AuthModal = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-
           {/* Username (only signup) */}
           {mode === "signup" && (
             <div className="relative">
@@ -142,7 +135,9 @@ export const AuthModal = () => {
 
           {/* Switch Mode */}
           <p className="text-center text-sm text-gray-400">
-            {mode === "login" ? "Don't have an account?" : "Already have an account?"}
+            {mode === "login"
+              ? "Don't have an account?"
+              : "Already have an account?"}
             <button
               type="button"
               onClick={() => setMode(mode === "login" ? "signup" : "login")}
@@ -172,7 +167,6 @@ export const AuthModal = () => {
             }}
             onError={() => alert("Google login failed")}
           />
-
         </form>
       </div>
     </div>

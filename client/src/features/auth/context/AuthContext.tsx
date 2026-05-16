@@ -1,5 +1,3 @@
-// src/context/AuthContext.tsx
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   loginApi,
@@ -8,80 +6,48 @@ import {
   getMeApi,
   googleLoginApi,
 } from "@/features/auth/services/AuthService";
-
-import { getWalletApi } from "@/features/auth/services/AuthService";
-
-type User = {
-  id: string;
-  username: string;
-  email?: string;
-  avatar?: string;
-};
-
-type AuthContextType = {
-  user: User | null;
-  balance: number;
-  loading: boolean;
-  isAuthModalOpen: boolean;
-  setAuthModalOpen: (v: boolean) => void;
-
-  login: (data: { identifier: string; password: string }) => Promise<void>;
-  signup: (data: { username: string; email?: string; password: string }) => Promise<void>;
-  logout: () => Promise<void>;
-  googleLogin: (token: string) => Promise<void>;
-
-  // 🔥 expose for refresh after bet
-  refreshWallet: () => Promise<void>;
-};
+import { AuthContextType, User } from "../types/authTypes";
+import { useGameStore } from "@/features/betting/store/betting.store";
 
 const AuthContext = createContext<AuthContextType>({} as any);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
-  const [balance, setBalance] = useState(0);
+  const { setBalance, setBonusClaimed } = useGameStore();
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
-  // 🪙 Wallet Fetch (centralized)
-  const fetchWallet = async () => {
+  const getMe = async () => {
     try {
-      const res = await getWalletApi();
-      setBalance(Number(res.balance) || 0);
+      const res = await getMeApi();
+      setUser(res.user);
+
+      setBalance(Number(res.user.balance) || 0);
+      setBonusClaimed(res.user.bonus_claimed);
     } catch {
+      setUser(null);
       setBalance(0);
+      setBonusClaimed(false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 🔁 Auto login
   useEffect(() => {
-    const init = async () => {
-      try {
-        const res = await getMeApi();
-        setUser(res.user);
-
-        await fetchWallet(); // ✅ correct source
-      } catch {
-        setUser(null);
-        setBalance(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    init();
+    getMe();
   }, []);
 
-  // 🔐 LOGIN
   const login = async (data: { identifier: string; password: string }) => {
     const res = await loginApi(data);
-    setUser(res.user);
-
-    await fetchWallet(); // ✅ no getMe again
-
+    setUser(res?.user);
+    setBalance(Number(res.user.balance) || 0);
+    setBonusClaimed(res.user.bonus_claimed);
+    await getMe();
     setAuthModalOpen(false);
   };
 
-  // 🆕 SIGNUP
   const signup = async (data: {
     username: string;
     email?: string;
@@ -89,31 +55,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }) => {
     await signupApi(data);
     await login({ identifier: data.username, password: data.password });
+    await getMe();
   };
 
-  // 🔥 GOOGLE LOGIN
   const googleLogin = async (token: string) => {
     const res = await googleLoginApi(token);
 
-    setUser(res.data.user);
-
-    await fetchWallet(); // ✅ correct
-
+    setUser(res.user);
+    setBalance(Number(res.user.balance) || 0);
+    setBonusClaimed(res.user.bonus_claimed);
+    await getMe();
     setAuthModalOpen(false);
   };
 
-  // 🔴 LOGOUT
   const logout = async () => {
     await logoutApi();
     setUser(null);
     setBalance(0);
+    setBonusClaimed(false);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        balance,
         loading,
         isAuthModalOpen,
         setAuthModalOpen,
@@ -121,7 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         logout,
         googleLogin,
-        refreshWallet: fetchWallet, // 🔥 important for betting
       }}
     >
       {children}

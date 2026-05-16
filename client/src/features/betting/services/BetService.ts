@@ -15,7 +15,7 @@ export const placeBet = async (amount: number) => {
   }
 };
 
-export const resolveBet = async (betId: number, multiplier: number) => {
+export const resolveBet = async (betId: string, multiplier: number) => {
   try {
     const res = await axios.post(API_ENDPOINTS.BET.RESOLVE, {
       betId,

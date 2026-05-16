@@ -5,10 +5,7 @@ export const API_ENDPOINTS = {
     GOOGLE: "/auth/google",
     LOGOUT: "/auth/logout",
     ME: "/auth/me",
-  },
-
-  WALLET: {
-    GET: "/wallet",
+    BONUS: "/auth/welcome",
   },
 
   BET: {
@@ -18,5 +15,8 @@ export const API_ENDPOINTS = {
   POOL: {
     ACTIVEPOOL: "/pool/active",
     JOINPOOL: "/pool/join",
-  }
+  },
+  LEADERBOARD: {
+    WEEKLY: "/leaderboard/weekly",
+  },
 };

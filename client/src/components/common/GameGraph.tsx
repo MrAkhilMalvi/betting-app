@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 
-type GameState = "waiting" | "running" | "crashed";
 
 interface Props {
   multiplier: number;
-  gameState: GameState;
+  gameState: string;
 }
 
 export const GameGraph: React.FC<Props> = ({ multiplier, gameState }) => {
