@@ -128,3 +128,18 @@ export const logoutUser = async (refreshToken) => {
     refreshToken,
   ]);
 };
+
+export const claimWelcomeBonus = async (userId) => {
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM claim_welcome_bonus($1)
+      `,
+    [userId],
+  );
+
+  return {
+    success: true,
+    balance: result.rows[0].balance,
+  };
+};

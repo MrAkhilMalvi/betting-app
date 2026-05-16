@@ -3,18 +3,18 @@ export const setAuthCookies = (res, accessToken, refreshToken) => {
 
   res.cookie("rocket_access_token", accessToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     maxAge: 15 * 60 * 1000,
-    path: "/"
+    path: "/",
   });
 
   res.cookie("rocket_refresh_token", refreshToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/"
+    path: "/",
   });
 };
 

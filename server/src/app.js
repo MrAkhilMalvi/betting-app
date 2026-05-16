@@ -3,9 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./modules/auth/auth.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
-import walletRoutes from "./modules/wallet/wallet.routes.js";
 import betRoutes from "./modules/bet/bet.routes.js";
 import poolRoutes from "./modules/pool/pool.routes.js";
+import leaderboardRoutes from "./modules/leaderboard/leaderboard.routes.js";
 
 const app = express();
 
@@ -22,9 +22,9 @@ app.use(cors({
 
 // ✅ Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/wallet", walletRoutes);
 app.use("/api/bet", betRoutes);
 app.use("/api/pool", poolRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 // ✅ Health check
 app.get("/", (req, res) => {
