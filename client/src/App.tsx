@@ -4,70 +4,62 @@ import { Header } from "./components/common/Header";
 import { AuthModal } from "./features/auth/components/AuthModal";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute";
 import { RocketGame } from "./features/betting/pages/index";
-import { Lobby } from "./pages/Lobby"; // ✅ ADD THIS
+import { Lobby } from "./pages/Lobby";
 import { PoolPage } from "./features/pool/pages/PoolPage";
 import { Leaderboard } from "./features/leaderboard/components/Leaderboard";
-
 import { ChevronLeft } from "lucide-react";
+import { ViewState } from "./types/types";
+import AppLayout from "./Layout";
+
+
 
 export default function App() {
-  const [view, setView] = useState<"lobby" | "game" | "pool" | "leaderboard">("lobby");
+  const [view, setView] = useState<ViewState>("lobby");
 
-  // Helper to handle "Exit" logic
   const handleBackToLobby = () => setView("lobby");
 
   return (
     <AuthProvider>
-      <Header 
-        onGoHome={handleBackToLobby}
-        onOpenLeaderboard={() => setView('leaderboard')}  
-      />
+      <AppLayout
+        view={view}
+        onBackToLobby={handleBackToLobby}
+        onOpenLeaderboard={() => setView("leaderboard")}
+      >
+        {/* Render views with precise entry transitions */}
+        <div className="h-full w-full">
+          {view === "lobby" && (
+            <div className="animate-fadeIn">
+              <Lobby
+                onSelectGame={() => setView("game")}
+                onOpenPool={() => setView("pool")}
+                onOpenLeaderboard={() => setView("leaderboard")}
+              />
+            </div>
+          )}
 
-      <main className="flex-1 bg-[#0B0E14] min-h-[calc(100vh-80px)]">
-        {/* Render "Back" button automatically for any view that isn't the lobby */}
-        {view !== "lobby" && (
-          <div className="max-w-7xl mx-auto px-6 pt-6">
-            <button 
-              onClick={handleBackToLobby}
-              className="group flex items-center gap-2 text-gray-500 hover:text-white transition-colors"
-            >
-              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10">
-                <ChevronLeft size={16} />
+          {view === "game" && (
+            <ProtectedRoute>
+              <div className="animate-fadeIn">
+                <RocketGame />
               </div>
-              <span className="text-xs font-black uppercase tracking-widest">Exit to Lobby</span>
-            </button>
-          </div>
-        )}
+            </ProtectedRoute>
+          )}
 
-        {/* Dynamic Views */}
-        {view === "lobby" && (
-          <Lobby
-            onSelectGame={() => setView("game")}
-            onOpenPool={() => setView("pool")}
-            onOpenLeaderboard={() => setView("leaderboard")}
-          />
-        )}
+          {view === "pool" && (
+            <ProtectedRoute>
+              <div className="animate-fadeIn">
+                <PoolPage />
+              </div>
+            </ProtectedRoute>
+          )}
 
-        {view === "game" && (
-          <ProtectedRoute>
-            <RocketGame />
-          </ProtectedRoute>
-        )}
-
-        {view === "pool" && (
-          <ProtectedRoute>
-            <PoolPage />
-          </ProtectedRoute>
-        )}
-
-        {view === "leaderboard" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Leaderboard />
-          </div>
-        )}
-        
-      </main>
-
+          {view === "leaderboard" && (
+            <div className="animate-fadeIn">
+              <Leaderboard />
+            </div>
+          )}
+        </div>
+      </AppLayout>
       <AuthModal />
     </AuthProvider>
   );
