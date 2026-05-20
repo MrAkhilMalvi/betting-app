@@ -95,7 +95,7 @@ export const googleUser = async (token, meta) => {
 
       // 🪙 Create wallet
       await clientDB.query(
-        "INSERT INTO wallets(user_id, balance) VALUES($1, 1000)",
+        "INSERT INTO wallets(user_id, balance) VALUES($1, 0)",
         [user.id],
       );
 
