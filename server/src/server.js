@@ -10,8 +10,15 @@ import redis from "./config/redis.js";
 import { setupSocketHandlers } from "./config/socket/socket.handlers.js";
 import { startWaitingPhase } from "./game/game.engine.js";
 import { setGameState } from "./game/game.state.js";
+import { startPoolListener } from "./modules/pool/events/pool.listner.js";
+import { startPoolLifecycle } from "./modules/pool/scheduler/pool.lifecycle.js";
+import { startPoolScheduler } from "./modules/pool/scheduler/pool.scheduler.js";
+
+
 
 const server = http.createServer(app);
+
+
 
 const io = new Server(server, {
   cors: {
@@ -23,11 +30,13 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
+
 setIO(io);
+
 io.use(socketAuth);
+
 setupSocketHandlers(io);
 
-// initialize game
 (async () => {
   const running = await redis.get("game:running");
 
@@ -37,6 +46,7 @@ setupSocketHandlers(io);
     startWaitingPhase();
   }
 })();
+
 
 const PORT = process.env.PORT || 5000;
 
@@ -51,4 +61,10 @@ server.listen(PORT, async () => {
       multiplier: 1,
     });
   }
+
+  await startPoolListener();
+  startPoolLifecycle();
+  startPoolScheduler();
+
+  console.log("🎯 Pool systems started");
 });

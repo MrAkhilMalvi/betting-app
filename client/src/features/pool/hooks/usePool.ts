@@ -1,71 +1,86 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Pool } from "../types/pool.types";
-
 import { socket } from "@/providers/socket/socket";
 import { fetchActivePool, joinPool } from "../services/poolService";
+import { Pool } from "../types/pool.types";
 
 export const usePool = () => {
   const [pool, setPool] = useState<Pool | null>(null);
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
-  // 📦 Load pool
   const loadPool = async () => {
     try {
       const data = await fetchActivePool();
+
       setPool(data);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.response?.data?.message || "Failed to load pool");
     }
   };
 
-  // 🎟 Join pool
   const join = async () => {
     if (!pool) return;
 
-    setLoading(true);
-
     try {
-      const res = await joinPool(pool.id);
+      setLoading(true);
+      await joinPool(pool.id);
+
       toast.success("Joined pool successfully 🎉");
-      await loadPool();
     } catch (err: any) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || "Failed to join pool");
+      toast.error(err?.message || "Failed to join pool");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Initial load
     loadPool();
 
-    // 🏆 Winner event
-    socket.on("poolWinner", async (data) => {
-      console.log("🏆 Winner Event:", data);
-
-      toast.success("🏆 Pool winner announced!");
-
-      await loadPool();
+    socket.on("pool:created", (data: Pool) => {
+      setPool(data);
     });
 
-    // 🔥 Pool updated
-    socket.on("poolUpdated", async () => {
-      await loadPool();
+    socket.on("pool:updated", (data: Pool) => {
+      setPool(data);
+    });
+
+    socket.on("pool:countdown", (data) => {
+      setCountdown(data.remaining);
+    });
+
+    socket.on("pool:locked", () => {
+      toast("Pool locked 🔒");
+    });
+
+    socket.on("pool:winner", (data) => {
+      toast.success(`🏆 Winner announced`);
+
+      setPool((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          status: "completed",
+          winner_id: data.winnerId,
+        };
+      });
     });
 
     return () => {
-      socket.off("poolWinner");
-
-      socket.off("poolUpdated");
+      socket.off("pool:created");
+      socket.off("pool:updated");
+      socket.off("pool:countdown");
+      socket.off("pool:locked");
+      socket.off("pool:winner");
     };
   }, []);
 
   return {
     pool,
     loading,
+    countdown,
     join,
+    reload: loadPool,
   };
 };

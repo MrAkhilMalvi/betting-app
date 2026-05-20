@@ -3,21 +3,35 @@ import { GameCard } from "../components/common/GameCard";
 import { useGameStore } from "@/features/betting/store/betting.store";
 import { claimWelcomeBonus } from "@/features/auth/services/AuthService";
 import toast from "react-hot-toast";
+import { useAuth } from "@/features/auth/context/AuthContext";
+import {
+  spawnCoins,
+  triggerConfetti,
+} from "@/components/common/TriggerConfetti";
 
 export const Lobby = ({ onSelectGame, onOpenPool }: any) => {
   const { bonusClaimed, setBonusClaimed, setBalance } = useGameStore();
+  const { user, setAuthModalOpen } = useAuth();
 
-  const handleClaimBonus = async () => {
+  const handleClaimBonus = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
     try {
       const data = await claimWelcomeBonus();
 
-      setBalance(data.balance);
+      triggerConfetti();
+      spawnCoins(e.clientX, e.clientY);
 
+      setBalance(data.balance);
       setBonusClaimed(true);
+      toast.success("1,000 Coins claimed!");
     } catch (error: any) {
       toast.error(error.message);
     }
   };
+
   return (
     <div className="p-6 lg:p-12 max-w-6xl mx-auto space-y-12">
       {/* PROFESSIONAL WELCOME BANNER */}
@@ -48,16 +62,15 @@ export const Lobby = ({ onSelectGame, onOpenPool }: any) => {
             onClick={handleClaimBonus}
             disabled={bonusClaimed}
             className={`
-    px-10 py-5 rounded-2xl
-    font-black uppercase italic
-    tracking-tight text-lg transition-all
-
-    ${
-      bonusClaimed
-        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-        : "bg-green-500 text-black hover:scale-105 hover:shadow-[0_0_40px_rgba(34,197,94,0.4)]"
-    }
-  `}
+              px-10 py-5 rounded-2xl
+              font-black uppercase italic
+              tracking-tight text-lg transition-all
+              ${
+                bonusClaimed
+                  ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  : "bg-green-500 text-black hover:scale-105 hover:shadow-[0_0_40px_rgba(34,197,94,0.4)]"
+              }
+            `}
           >
             {bonusClaimed ? "BONUS CLAIMED" : "GET FREE COINS NOW"}
           </button>
@@ -71,7 +84,7 @@ export const Lobby = ({ onSelectGame, onOpenPool }: any) => {
         />
       </div>
 
-      {/* EXCLUSIVE GAMES SECTION (ONLY 2 CARDS) */}
+      {/* EXCLUSIVE GAMES SECTION */}
       <section>
         <div className="flex items-center gap-4 mb-10">
           <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.4em]">
@@ -93,7 +106,13 @@ export const Lobby = ({ onSelectGame, onOpenPool }: any) => {
                 fill="currentColor"
               />
             }
-            onClick={onSelectGame}
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              onSelectGame();
+            }}
           />
           <GameCard
             title="Weekly Pool"
@@ -107,7 +126,13 @@ export const Lobby = ({ onSelectGame, onOpenPool }: any) => {
                 fill="currentColor"
               />
             }
-            onClick={onOpenPool}
+            onClick={() => {
+              if (!user) {
+                setAuthModalOpen(true);
+                return;
+              }
+              onOpenPool();
+            }}
           />
         </div>
       </section>

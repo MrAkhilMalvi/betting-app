@@ -1,4 +1,4 @@
-import { Rocket, LogOut, Trophy, Wallet, Bell } from "lucide-react";
+import { Rocket, LogOut, Trophy, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useGameStore } from "@/features/betting/store/betting.store";
 
@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export const Header = ({ onGoHome, onOpenLeaderboard }: HeaderProps) => {
   const { user, setAuthModalOpen, logout } = useAuth();
-  const { balance} = useGameStore();
+  const { balance } = useGameStore();
   const safeBalance = Number.isFinite(Number(balance)) ? Number(balance) : 0;
 
   return (
@@ -37,12 +37,15 @@ export const Header = ({ onGoHome, onOpenLeaderboard }: HeaderProps) => {
               </span>
             </button>
 
-            {/* Premium Balance Pill */}
-            <div className="flex items-center gap-3 bg-[#1A1F29] border border-white/10 p-1 pr-4 rounded-xl shadow-xl">
+            {/* Premium Balance Pill - ADDED ID FOR TARGETING */}
+            <div 
+              id="header-wallet-pill" 
+              className="flex items-center gap-3 bg-[#1A1F29] border border-white/10 p-1 pr-4 rounded-xl shadow-xl transition-transform duration-300"
+            >
               <div className="bg-yellow-500/10 p-2 rounded-lg">
                 <img 
                   src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Coin.png" 
-                  className="w-5 h-5" alt="coin" 
+                  className="w-5 h-5 animate-bounce" alt="coin" 
                 />
               </div>
               <div className="flex flex-col">
