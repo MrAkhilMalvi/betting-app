@@ -1,6 +1,7 @@
 import * as service from "./auth.service.js";
 import { setAuthCookies } from "../../utils/cookies.js";
 import pool from "../../config/db.js";
+import { clearAuthCookies } from "../../utils/cookies.js";
 
 export const getMe = async (req, res, next) => {
   try {
@@ -97,12 +98,21 @@ export const googleLogin = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    await service.logoutUser(req.cookies.refreshToken);
+    const refreshToken = req.cookies.rocket_refresh_token;
 
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    if (refreshToken) {
+      await pool.query(
+        "DELETE FROM sessions WHERE refresh_token = $1",
+        [refreshToken]
+      );
+    }
 
-    res.json({ success: true, message: "Logged out" });
+    clearAuthCookies(res);
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
   } catch (err) {
     next(err);
   }

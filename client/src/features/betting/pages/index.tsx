@@ -80,11 +80,11 @@ export const RocketGame: React.FC = () => {
   const isDisabled = isLoading || gameState === "crashed" || (gameState === "running" && !hasBet);
 
   return (
-    <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 lg:p-8 max-w-[1600px] mx-auto w-full min-h-[calc(100vh-80px)] font-sans bg-[#0B0E14]">
+    <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 p-3 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full min-h-[calc(100vh-80px)] font-sans bg-background">
       
       {/* LEFT: LIVE PLAYERS TAPE */}
-      <aside className="lg:col-span-3 bg-[#151A22] rounded-[2rem] border border-white/5 flex flex-col shadow-2xl overflow-hidden order-3 lg:order-1">
-        <div className="p-5 border-b border-white/5 bg-[#1A1F29]/50 backdrop-blur-md flex items-center justify-between">
+      <aside className="lg:col-span-3 bg-panel rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 flex flex-col shadow-2xl overflow-hidden order-3 lg:order-1 h-[250px] sm:h-[320px] lg:h-auto">
+        <div className="p-4 sm:p-5 border-b border-white/5 bg-surface/20 backdrop-blur-md flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-green-400" />
             <h2 className="font-black text-xs uppercase tracking-widest text-gray-300">Live Players</h2>
@@ -95,11 +95,11 @@ export const RocketGame: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 custom-scrollbar">
             {liveBets.map((bet) => (
               <div key={bet.id} className={clsx(
                 "flex justify-between items-center p-3 rounded-2xl border transition-all duration-300",
-                bet.status === "won" ? "bg-green-500/10 border-green-500/20" : "bg-[#0B0E14] border-white/5"
+                bet.status === "won" ? "bg-green-500/10 border-green-500/20" : "bg-background border-white/5"
               )}>
                 <div className="flex items-center gap-3">
                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${bet.userId}`} alt="av" className="w-8 h-8 rounded-lg bg-white/5" />
@@ -119,63 +119,64 @@ export const RocketGame: React.FC = () => {
       </aside>
 
       {/* CENTER: THE COCKPIT */}
-      <div className="lg:col-span-6 flex flex-col gap-6 order-1 lg:order-2">
+      <div className="lg:col-span-6 flex flex-col gap-4 sm:gap-6 order-1 lg:order-2">
         {/* VISUALIZER */}
-        <div className="relative bg-[#151A22] rounded-[2.5rem] border border-white/5 flex-1 min-h-[450px] flex items-center justify-center shadow-2xl overflow-hidden group">
+        <div className="relative bg-panel rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 flex-1 min-h-[240px] sm:min-h-[360px] lg:min-h-[450px] flex items-center justify-center shadow-2xl overflow-hidden group">
           <div className="absolute inset-0 z-0 opacity-40">
             <GameGraph multiplier={multiplier} gameState={gameState} />
           </div>
 
-          <div className="text-center z-10 pointer-events-none">
+          <div className="text-center z-10 pointer-events-none p-4">
             {gameState === "waiting" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin mb-6" />
-                <h3 className="text-xs font-black text-green-500 uppercase tracking-[0.5em] mb-2">Next Round In</h3>
-                <span className="text-6xl font-black text-white italic">{timeRemaining}s</span>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin mb-4 sm:mb-6" />
+                <h3 className="text-[10px] sm:text-xs font-black text-green-500 uppercase tracking-[0.5em] mb-1 sm:mb-2">Next Round In</h3>
+                <span className="text-4xl sm:text-6xl font-black text-white italic">{timeRemaining}s</span>
               </motion.div>
             )}
 
             {gameState === "running" && (
               <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
-                <span className="text-xs font-black text-green-500 uppercase tracking-[0.5em] block mb-2">Current Payout</span>
-                <h1 className="text-9xl font-black text-white italic tracking-tighter drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">
-                  {multiplier.toFixed(2)}<span className="text-4xl text-gray-500">x</span>
+                <span className="text-[10px] sm:text-xs font-black text-green-500 uppercase tracking-[0.5em] block mb-1 sm:mb-2">Current Payout</span>
+                <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-white italic tracking-tighter drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                  {multiplier.toFixed(2)}<span className="text-2xl sm:text-4xl text-gray-500">x</span>
                 </h1>
               </motion.div>
             )}
 
             {gameState === "crashed" && (
               <motion.div initial={{ scale: 1.2 }} animate={{ scale: 1 }}>
-                <h1 className="text-9xl font-black text-red-500 italic tracking-tighter drop-shadow-[0_0_50px_rgba(239,68,68,0.4)]">
-                  {multiplier.toFixed(2)}<span className="text-4xl text-red-800">x</span>
+                <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-red-500 italic tracking-tighter drop-shadow-[0_0_50px_rgba(239,68,68,0.4)]">
+                  {multiplier.toFixed(2)}<span className="text-2xl sm:text-4xl text-red-800">x</span>
                 </h1>
-                <span className="inline-block mt-4 px-6 py-2 bg-red-500 text-black text-xs font-black rounded-full uppercase italic">Rocket Crashed</span>
+                <span className="inline-block mt-3 sm:mt-4 px-4 sm:px-6 py-1.5 sm:py-2 bg-red-500 text-black text-[10px] sm:text-xs font-black rounded-full uppercase italic">Rocket Crashed</span>
               </motion.div>
             )}
           </div>
         </div>
 
         {/* CONTROLS */}
-        <div className="bg-[#151A22] p-6 rounded-[2.5rem] border border-white/5 shadow-2xl">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 bg-[#0B0E14] rounded-3xl p-5 border border-white/5 focus-within:border-green-500/30 transition-all">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 block">Bet Amount</label>
-                <div className="flex items-center gap-3 mb-4">
+        <div className="bg-panel p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 shadow-2xl">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-1 bg-background rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-white/5 focus-within:border-green-500/30 transition-all">
+                <label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 block">Bet Amount</label>
+                <div className="flex items-center gap-3 mb-3 sm:mb-4">
                     <CoinIcon size={24} />
                     <input
                       type="number"
                       value={betAmount}
                       onChange={(e) => setBetAmount(Number(e.target.value))}
                       disabled={hasBet || gameState === "running"}
-                      className="bg-transparent outline-none text-3xl font-black text-white w-full italic"
+                      className="bg-transparent outline-none text-2xl sm:text-3xl font-black text-white w-full italic"
                     />
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                     {[10, 50, 100, "MAX"].map((val) => (
                       <button 
                         key={val} 
+                        disabled={hasBet || gameState === "running"}
                         onClick={() => setBetAmount(val === "MAX" ? balance : Number(val))}
-                        className="py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black text-gray-400 border border-white/5 transition-all"
+                        className="py-1.5 sm:py-2 bg-white/5 hover:bg-white/10 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black text-gray-400 border border-white/5 transition-all disabled:opacity-40"
                       >
                         {val === "MAX" ? val : `+${val}`}
                       </button>
@@ -187,16 +188,16 @@ export const RocketGame: React.FC = () => {
               onClick={handleBetAction}
               disabled={isDisabled}
               className={clsx(
-                "md:w-64 h-[120px] rounded-3xl font-black text-xl uppercase italic tracking-widest transition-all active:scale-95 flex flex-col items-center justify-center border-b-8 border-black/20",
+                "w-full sm:w-48 lg:w-64 h-[80px] sm:h-auto rounded-2xl sm:rounded-3xl font-black text-lg sm:text-xl uppercase italic tracking-widest transition-all active:scale-95 flex flex-col items-center justify-center border-b-4 sm:border-b-8 border-black/20 shrink-0",
                 btnProps.color
               )}
             >
                {gameState === "running" && hasBet ? (
                  <>
-                    <span className="text-[10px] opacity-60 mb-1">Take Coins</span>
+                    <span className="text-[9px] sm:text-[10px] opacity-60 mb-0.5 sm:mb-1">Take Coins</span>
                     <div className="flex items-center gap-2">
-                        <CoinIcon size={20}/>
-                        <span className="text-2xl">{(betAmount * multiplier).toFixed(0)}</span>
+                        <CoinIcon size={18}/>
+                        <span className="text-xl sm:text-2xl">{(betAmount * multiplier).toFixed(0)}</span>
                     </div>
                  </>
                ) : (
@@ -208,27 +209,29 @@ export const RocketGame: React.FC = () => {
       </div>
 
       {/* RIGHT: WALLET & HISTORY */}
-      <aside className="lg:col-span-3 flex flex-col gap-6 order-2 lg:order-3">
+      <aside className="lg:col-span-3 flex flex-col gap-4 sm:gap-6 order-2 lg:order-3 h-auto">
         {/* WALLET */}
-        <div className="bg-gradient-to-br from-[#1A1F29] to-[#151A22] rounded-[2rem] border border-white/5 p-6 shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+        <div className="bg-gradient-to-br from-surface/40 to-panel rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 p-4 sm:p-6 shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform hidden sm:block">
             <Wallet size={64} />
           </div>
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Account Balance</h3>
+          <h3 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 sm:mb-4">Account Balance</h3>
           <div className="flex items-center gap-3">
-             <CoinIcon size={32} />
-             <span className="text-4xl font-black text-white italic tracking-tighter">
+             <CoinIcon size={28} />
+             <span className="text-2xl sm:text-4xl font-black text-white italic tracking-tighter">
                 {balance.toLocaleString()}
              </span>
           </div>
-          <div className="mt-6 flex items-center justify-between text-[10px] font-black text-green-500 uppercase tracking-widest bg-green-500/5 p-3 rounded-xl border border-green-500/10">
-             <ShieldCheck size={14}/> Verified Rocket Wallet
+          <div className="mt-4 sm:mt-6 flex items-center justify-between text-[9px] sm:text-[10px] font-black text-green-500 uppercase tracking-widest bg-green-500/5 p-2 sm:p-3 rounded-xl border border-green-500/10">
+             <div className="flex items-center gap-2">
+               <ShieldCheck size={14}/> Verified Wallet
+             </div>
           </div>
         </div>
 
         {/* HISTORY TAPE */}
-        <div className="bg-[#151A22] rounded-[2rem] border border-white/5 flex flex-col shadow-xl flex-1 overflow-hidden">
-          <div className="p-5 border-b border-white/5 flex items-center justify-between bg-[#1A1F29]/50">
+        <div className="bg-panel rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 flex flex-col shadow-xl overflow-hidden h-[180px] sm:h-[220px] lg:h-auto lg:flex-1">
+          <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-surface/20">
             <div className="flex items-center gap-2">
               <History className="w-4 h-4 text-yellow-500" />
               <h2 className="font-black text-xs uppercase tracking-widest text-gray-300">Previous</h2>
@@ -236,13 +239,13 @@ export const RocketGame: React.FC = () => {
             <TrendingUp size={14} className="text-gray-600" />
           </div>
 
-          <div className="p-4 grid grid-cols-3 gap-2 overflow-y-auto custom-scrollbar">
+          <div className="p-3 sm:p-4 grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-3 gap-1.5 sm:gap-2 overflow-y-auto custom-scrollbar">
               {history.map((h) => (
                   <div key={h.id} className={clsx(
-                    "px-2 py-3 rounded-xl text-[11px] font-black text-center border font-mono transition-all",
+                    "px-1 sm:px-2 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-[11px] font-black text-center border font-mono transition-all",
                     h.crashPoint >= 10 ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" :
                     h.crashPoint >= 2 ? "bg-green-500/10 text-green-400 border-green-500/20" :
-                    "bg-[#0B0E14] text-gray-500 border-white/5"
+                    "bg-background text-gray-500 border-white/5"
                   )}>
                     {h.crashPoint.toFixed(2)}x
                   </div>

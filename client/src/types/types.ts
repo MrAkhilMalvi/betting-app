@@ -7,3 +7,12 @@ export interface User {
 }
 
 export type AuthMethod = "email" | "mobile" | "google";
+
+export type ViewState = "lobby" | "game" | "pool" | "leaderboard";
+
+export interface AppLayoutProps {
+  view: ViewState;
+  onBackToLobby: () => void;
+  onOpenLeaderboard: () => void;
+  children: React.ReactNode;
+}
